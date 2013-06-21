@@ -54,6 +54,7 @@ namespace sqlite_core
                 }
             }
         }
+        public Dictionary<string, string> table_schema { get; private set; }
 
         public string database_connection_string { get; private set; }
         private SQLiteConnection connection = null;
@@ -169,12 +170,36 @@ namespace sqlite_core
         {
         }
 
+        public bool retrieve_table_schema(string table_name)
+        {
+            try
+            {
+                if (this.tables_in_db.Contains(table_name))
+                {
+                    DataTable ret = this.run_query(String.Format("PRAGMA table_info({0})", table_name));
+                    foreach (DataRow row in ret.Rows)
+                    {
+                        this.table_schema[row.ItemArray[1].ToString()] = row.ItemArray[2].ToString();
+                    }
+                    return true;
+                }
+                else
+                    return false;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
         private void close_connections()
         {
             if (this.data_reader != null && !this.data_reader.IsClosed)
-                data_reader.Close();
+                data_reader.Dispose();
+            if (this.command != null)
+                command.Dispose();
             if (this.connection != null)
-                connection.Close();
+                connection.Dispose();
         }
     }
 }
